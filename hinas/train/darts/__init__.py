@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.cuda.amp import autocast
 
 from horch.common import convert_tensor
+from horch.train.callbacks import Callback
 from horch.train.learner import Learner, backward, optimizer_step
 
 
@@ -13,13 +14,29 @@ def requires_grad(network: nn.Module, arch: bool, model: bool):
         p.requires_grad_(model)
 
 
+def shuffle_batch(*tensors):
+    indices = torch.randperm(len(tensors[0]))
+    return tuple(t[indices] for t in tensors)
+
+
 class DARTSLearner(Learner):
 
     def __init__(self, network, criterion, optimizer_arch, optimizer_model, lr_scheduler,
-                 grad_clip_norm=5, **kwargs):
+                 grad_clip_norm=5, search_loader=None, **kwargs):
         self.train_arch = True
+        self.search_loader = search_loader
+        self.search_loader_iter = None
         super().__init__(network, criterion, (optimizer_arch, optimizer_model),
                          lr_scheduler, grad_clip_norm=grad_clip_norm, **kwargs)
+
+    def get_search_batch(self):
+        if self.search_loader_iter is None:
+            self.search_loader_iter = iter(self.search_loader)
+        try:
+            return next(self.search_loader_iter)
+        except StopIteration:
+            self.search_loader_iter = iter(self.search_loader)
+            return self.get_search_batch()
 
     def train_batch(self, batch):
         state = self._state['train']
@@ -28,9 +45,10 @@ class DARTSLearner(Learner):
         lr_scheduler = self.lr_schedulers[0]
 
         network.train()
-        input, target, input_search, target_search = convert_tensor(batch, self.device)
+        input, target = convert_tensor(batch, self.device)
 
         if self.train_arch:
+            input_search, target_search = convert_tensor(self.get_search_batch(), self.device)
             requires_grad(network, arch=True, model=False)
             optimizer_arch.zero_grad()
             with autocast(self.fp16):
@@ -84,3 +102,13 @@ class DARTSLearner(Learner):
             "batch_size": input.size(0),
             "y_pred": output,
         })
+
+
+class TrainArchSchedule(Callback):
+
+    def __init__(self, after_epochs):
+        super().__init__()
+        self.after_epochs = after_epochs
+
+    def begin_epoch(self, state):
+        self.learner.train_arch = state['epoch'] >= self.after_epochs

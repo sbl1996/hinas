@@ -1,5 +1,3 @@
-from typing import Any
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,9 +5,9 @@ import torch.nn.functional as F
 from horch.nn import DropPath, GlobalAvgPool
 from horch.models.layers import Conv2d
 
-from horch.nas.operations import OPS, FactorizedReduce, ReLUConvBN
-from horch.nas.darts.genotypes import Genotype
-from horch.nas.primitives import get_primitives
+from hinas.models.operations import OPS, FactorizedReduce, ReLUConvBN
+from hinas.models.darts.genotypes import Genotype
+from hinas.models.primitives import get_primitives
 
 
 class MixedOp(nn.Module):

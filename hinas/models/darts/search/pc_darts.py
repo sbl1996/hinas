@@ -4,10 +4,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from horch.nas.operations import OPS
-from horch.nas.darts.genotypes import Genotype
-from horch.nas.primitives import get_primitives
-import horch.nas.darts.search.darts as darts
+from hinas.models.operations import OPS
+from hinas.models.darts.genotypes import Genotype
+from hinas.models.primitives import get_primitives
+import hinas.models.darts.search.darts as darts
 
 
 def channel_shuffle(x, g):

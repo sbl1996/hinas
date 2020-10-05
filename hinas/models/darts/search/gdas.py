@@ -1,7 +1,9 @@
 import torch
 import torch.nn.functional as F
-from horch.nas.darts.search import darts
+
 from horch.train.callbacks import Callback
+
+from hinas.models.darts.search import darts
 
 
 def gumbel_sample(a, tau):

@@ -5,9 +5,9 @@ import torch.nn as nn
 from horch.nn import DropPath
 from horch.models.layers import Seq
 
-from horch.nas.operations import OPS
-from horch.nas.primitives import get_primitives
-from horch.nas.darts.search import darts
+from hinas.models.operations import OPS
+from hinas.models.primitives import get_primitives
+from hinas.models.darts.search import darts
 
 
 class MixedOp(nn.Module):
