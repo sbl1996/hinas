@@ -1,8 +1,6 @@
 import torch
 import torch.nn.functional as F
 
-from horch.train.callbacks import Callback
-
 from hinas.models.darts.search import darts
 
 
@@ -59,14 +57,3 @@ class Network(darts.Network):
         return logits
 
 
-class TauSchedule(Callback):
-
-    def __init__(self, tau_max, tau_min):
-        super().__init__()
-        self.tau_max, self.tau_min = tau_max, tau_min
-
-    def begin_epoch(self, state):
-        tau_max = self.tau_max
-        tau_min = self.tau_min
-        tau = tau_max - (tau_max - tau_min) * (state['epoch'] / state['epochs'])
-        self.learner.model.tau = tau

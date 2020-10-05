@@ -1,19 +1,22 @@
 import torch.nn as nn
 from torch.optim import SGD, Adam
-from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from torchvision.transforms import ToTensor, Normalize, Compose, RandomCrop, RandomHorizontalFlip
 
 from horch.datasets import train_test_split
 from horch.defaults import set_defaults
+from horch.optim.lr_scheduler import CosineLR
+from horch.train.callbacks import Callback
 from horch.train.metrics import TrainLoss, Loss
 from horch.train.cls.metrics import Accuracy
 
 from horch.train import manual_seed
 
+from hinas.models.primitives import set_primitives, PRIMITIVES_darts
 from hinas.models.darts.search.pc_darts import Network
-from hinas.train.darts import DARTSLearner, TrainArchSchedule
+from hinas.train.darts import DARTSLearner
+from hinas.train.darts.callbacks import TrainArchSchedule, PrintGenotype
 
 manual_seed(0)
 
@@ -29,9 +32,8 @@ valid_transform = Compose([
     Normalize([0.491, 0.482, 0.447], [0.247, 0.243, 0.262]),
 ])
 
-
 root = '/Users/hrvvi/Code/study/pytorch/datasets/CIFAR10'
-ds = CIFAR10(root, train=True)
+ds = CIFAR10(root, train=True, download=True)
 ds = train_test_split(ds, test_ratio=0.003, shuffle=True)[1]
 ds_train, ds_search = train_test_split(
     ds, test_ratio=0.5, shuffle=True, random_state=42,
@@ -52,13 +54,15 @@ set_defaults({
         'affine': False,
     }
 })
+set_primitives(PRIMITIVES_darts)
 model = Network(8, 8, steps=4, multiplier=4, stem_multiplier=1, k=4)
 # model = Network(16, 8, k=4)
 criterion = nn.CrossEntropyLoss()
 
-optimizer_arch = Adam(model.arch_parameters(), lr=3e-4, betas=(0.5, 0.999), weight_decay=1e-3)
-optimizer_model = SGD(model.parameters(), 0.025, momentum=0.9, weight_decay=3e-4)
-lr_scheduler = CosineAnnealingLR(optimizer_model, T_max=50, eta_min=0.001)
+epochs = 50
+optimizer_arch = Adam(model.arch_parameters(), lr=6e-4, betas=(0.5, 0.999), weight_decay=1e-3)
+optimizer_model = SGD(model.parameters(), 0.1, momentum=0.9, weight_decay=3e-4)
+lr_scheduler = CosineLR(optimizer_model, epochs, min_lr=0)
 
 train_metrics = {
     "loss": TrainLoss(),
@@ -75,9 +79,6 @@ trainer = DARTSLearner(model, criterion, optimizer_arch, optimizer_model, lr_sch
                        search_loader=search_loader, work_dir='models/DARTS')
 
 
-trainer.fit(search_loader, 50, val_loader, val_freq=2,
-            callbacks=[TrainArchSchedule(after_epochs=15)])
-
-# trainer.resume()
-#
-# trainer.fit(train_loader, None, val_loader, eval_freq=2)
+trainer.fit(search_loader, 50, val_loader, val_freq=5,
+            callbacks=[PrintGenotype(after_epochs=14),
+                       TrainArchSchedule(after_epochs=15)])

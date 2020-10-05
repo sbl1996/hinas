@@ -17,7 +17,8 @@ from horch.train.callbacks import Callback
 from horch.train.metrics import TrainLoss, Loss
 
 from hinas.models.nas_bench_201.api import SimpleNASBench201
-from hinas.models.nas_bench_201.search.gdas import Network, TauSchedule
+from hinas.models.nas_bench_201.search.gdas import Network
+from hinas.train.darts.callbacks import TauSchedule
 from hinas.train.darts import DARTSLearner
 
 manual_seed(0)

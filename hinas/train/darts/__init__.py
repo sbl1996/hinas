@@ -3,7 +3,6 @@ import torch.nn as nn
 from torch.cuda.amp import autocast
 
 from horch.common import convert_tensor
-from horch.train.callbacks import Callback
 from horch.train.learner import Learner, backward, optimizer_step
 
 
@@ -104,11 +103,3 @@ class DARTSLearner(Learner):
         })
 
 
-class TrainArchSchedule(Callback):
-
-    def __init__(self, after_epochs):
-        super().__init__()
-        self.after_epochs = after_epochs
-
-    def begin_epoch(self, state):
-        self.learner.train_arch = state['epoch'] >= self.after_epochs

@@ -1,5 +1,6 @@
 import torch.nn.functional as F
-from hinas.models.darts.search.gdas import TauSchedule, gumbel_sample
+from hinas.models.darts.search.gdas import gumbel_sample
+from hinas.train.darts.callbacks import TauSchedule
 from hinas.models.nas_bench_201.search import darts
 
 
