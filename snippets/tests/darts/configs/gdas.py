@@ -1,0 +1,25 @@
+from hinas.models.primitives import PRIMITIVES_darts
+from hinas.models.darts.search.gdas import Network
+from hinas.train.darts.callbacks import PrintGenotype, TauSchedule
+
+seed = 42
+# train_batch_size = search_batch_size = val_batch_size = 64
+train_batch_size = search_batch_size = val_batch_size = 2
+
+primitives = PRIMITIVES_darts
+# network_fn = lambda: Network(16, 8)
+network_fn = lambda: Network(2, 5)
+
+epochs = 20
+arch_lr = 3e-4
+model_lr = 0.025
+model_min_lr = 0.001
+grad_clip_norm = 5.0
+
+work_dir = 'models/GDAS'
+
+val_freq = 5
+callbacks = [
+    PrintGenotype(from_epoch=1),
+    TauSchedule(tau_max=10.0, tau_min=0.1)
+]

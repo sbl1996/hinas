@@ -3,12 +3,12 @@ from horch.train.callbacks import Callback
 
 class PrintGenotype(Callback):
 
-    def __init__(self, after_epochs):
+    def __init__(self, from_epoch):
         super().__init__()
-        self.after_epochs = after_epochs
+        self.from_epoch = from_epoch
 
     def after_epoch(self, state):
-        if state['epoch'] < self.after_epochs:
+        if state['epoch'] < self.from_epoch:
             return
         p = """Genotype(
     normal=[
