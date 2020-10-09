@@ -105,7 +105,7 @@ class Network(nn.Module):
 
     def forward(self, x):
         s = self.stem(x)
-        weights = F.softmax(self.alphas, dim=-1)
+        weights = F.softmax(self.alphas, dim=1)
         for cell in self.cells:
             s = cell(s, weights)
         x = self.avg_pool(s)
@@ -122,28 +122,30 @@ class Network(nn.Module):
                 yield p
 
     def genotype(self):
-        PRIMITIVES = PRIMITIVES_nas_bench_201
-
-        def get_op(w):
-            if 'none' in PRIMITIVES:
-                i = max([k for k in range(len(PRIMITIVES)) if k != PRIMITIVES.index('none')], key=lambda k: w[k])
-            else:
-                i = max(range(len(PRIMITIVES)), key=lambda k: w[k])
-            return PRIMITIVES[i]
-
-        def _parse(weights):
-            genes = []
-            start = 0
-            for i in range(self._steps):
-                gene = []
-                end = start + i + 1
-                W = weights[start:end]
-                for j in range(i + 1):
-                    gene.append((get_op(W[j]), j))
-                start = end
-                genes.append(gene)
-            return genes
-
-        gene = _parse(F.softmax(self.alphas, dim=-1).cpu().detach().numpy())
+        alphas = F.softmax(self.alphas, dim=1).cpu().detach().numpy()
+        gene = parse_weights(alphas, self._steps)
         s = "+".join([f"|{'|'.join(f'{op}~{i}' for op, i in ops)}|" for ops in gene])
         return s
+
+
+def parse_weights(weights, steps):
+    PRIMITIVES = PRIMITIVES_nas_bench_201
+
+    def get_op(w):
+        if 'none' in PRIMITIVES:
+            i = max([k for k in range(len(PRIMITIVES)) if k != PRIMITIVES.index('none')], key=lambda k: w[k])
+        else:
+            i = max(range(len(PRIMITIVES)), key=lambda k: w[k])
+        return PRIMITIVES[i]
+
+    genes = []
+    start = 0
+    for i in range(steps):
+        gene = []
+        end = start + i + 1
+        W = weights[start:end]
+        for j in range(i + 1):
+            gene.append((get_op(W[j]), j))
+        start = end
+        genes.append(gene)
+    return genes

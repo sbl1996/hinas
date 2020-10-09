@@ -13,11 +13,6 @@ def requires_grad(network: nn.Module, arch: bool, model: bool):
         p.requires_grad_(model)
 
 
-def shuffle_batch(*tensors):
-    indices = torch.randperm(len(tensors[0]))
-    return tuple(t[indices] for t in tensors)
-
-
 class DARTSLearner(Learner):
 
     def __init__(self, network, criterion, optimizer_arch, optimizer_model, lr_scheduler,

@@ -127,7 +127,7 @@ class Network(nn.Module):
 
     def genotype(self):
 
-        gene_normal = parse_weights(F.softmax(self.alphas.detach().cpu(), dim=0).numpy(), self._steps)
+        gene_normal = parse_weights(F.softmax(self.alphas.detach().cpu(), dim=1).numpy(), self._steps)
 
         concat = range(2 + self._steps - self._multiplier, self._steps + 2)
         genotype = Genotype(

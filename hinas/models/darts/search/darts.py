@@ -98,8 +98,8 @@ class Network(nn.Module):
 
     def forward(self, x):
         s0 = s1 = self.stem(x)
-        weights_reduce = F.softmax(self.alphas_reduce, dim=-1)
-        weights_normal = F.softmax(self.alphas_normal, dim=-1)
+        weights_reduce = F.softmax(self.alphas_reduce, dim=1)
+        weights_normal = F.softmax(self.alphas_normal, dim=1)
         for cell in self.cells:
             weights = weights_reduce if cell.reduction else weights_normal
             s0, s1 = s1, cell(s0, s1, weights)
@@ -118,8 +118,8 @@ class Network(nn.Module):
 
     def genotype(self):
 
-        gene_normal = parse_weights(F.softmax(self.alphas_normal.detach().cpu(), dim=0).numpy(), self._steps)
-        gene_reduce = parse_weights(F.softmax(self.alphas_reduce.detach().cpu(), dim=0).numpy(), self._steps)
+        gene_normal = parse_weights(F.softmax(self.alphas_normal.detach().cpu(), dim=1).numpy(), self._steps)
+        gene_reduce = parse_weights(F.softmax(self.alphas_reduce.detach().cpu(), dim=1).numpy(), self._steps)
 
         concat = range(2 + self._steps - self._multiplier, self._steps + 2)
         genotype = Genotype(

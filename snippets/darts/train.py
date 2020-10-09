@@ -38,7 +38,6 @@ valid_transform = Compose([
 root = 'datasets/CIFAR10'
 ds = CIFAR10(root, train=True, download=True)
 
-# ds = train_test_split(ds, test_ratio=0.1)[1]
 ds_train, ds_search = train_test_split(
     ds, test_ratio=0.5, shuffle=True, random_state=cfg.seed,
     transform=train_transform, test_transform=train_transform)

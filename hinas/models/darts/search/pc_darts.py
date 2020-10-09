@@ -64,6 +64,7 @@ class Cell(darts.Cell):
 
         return torch.cat(states[-self._multiplier:], dim=1)
 
+
 def beta_softmax(betas, steps, scale=False):
     beta_list = []
     offset = 0
@@ -98,8 +99,8 @@ class Network(darts.Network):
 
     def forward(self, x):
         s0 = s1 = self.stem(x)
-        alphas_reduce = F.softmax(self.alphas_reduce, dim=-1)
-        alphas_normal = F.softmax(self.alphas_normal, dim=-1)
+        alphas_reduce = F.softmax(self.alphas_reduce, dim=1)
+        alphas_normal = F.softmax(self.alphas_normal, dim=1)
 
         betas_reduce = beta_softmax(self.betas_reduce, self._steps)
         betas_normal = beta_softmax(self.betas_normal, self._steps)
@@ -116,11 +117,11 @@ class Network(darts.Network):
         return [self.alphas_normal, self.alphas_reduce, self.betas_normal, self.betas_reduce]
 
     def genotype(self):
-        alphas_normal = F.softmax(self.alphas_normal.detach().cpu(), dim=0).numpy()
+        alphas_normal = F.softmax(self.alphas_normal.detach().cpu(), dim=1).numpy()
         betas_normal = beta_softmax(self.betas_normal.detach().cpu(), self._steps).numpy()
         alphas_normal = alphas_normal * betas_normal[:, None]
 
-        alphas_reduce = F.softmax(self.alphas_reduce.detach().cpu(), dim=0).numpy()
+        alphas_reduce = F.softmax(self.alphas_reduce.detach().cpu(), dim=1).numpy()
         betas_reduce = beta_softmax(self.betas_reduce.detach().cpu(), self._steps).numpy()
         alphas_reduce = alphas_reduce * betas_reduce[:, None]
 

@@ -53,7 +53,7 @@ class Network(darts.Network):
 
     def forward(self, x):
         s = self.stem(x)
-        alphas = F.softmax(self.alphas_reduce, dim=-1)
+        alphas = F.softmax(self.alphas_reduce, dim=1)
         betas = beta_softmax(self.betas_normal, self._steps)
 
         for cell in self.cells:
@@ -72,32 +72,10 @@ class Network(darts.Network):
                 yield p
 
     def genotype(self):
-        PRIMITIVES = PRIMITIVES_nas_bench_201
-
-        def get_op(w):
-            if 'none' in PRIMITIVES:
-                i = max([k for k in range(len(PRIMITIVES)) if k != PRIMITIVES.index('none')], key=lambda k: w[k])
-            else:
-                i = max(range(len(PRIMITIVES)), key=lambda k: w[k])
-            return PRIMITIVES[i]
-
-        def _parse(weights):
-            genes = []
-            start = 0
-            for i in range(self._steps):
-                gene = []
-                end = start + i + 1
-                W = weights[start:end]
-                for j in range(i + 1):
-                    gene.append((get_op(W[j]), j))
-                start = end
-                genes.append(gene)
-            return genes
-
-        alphas = F.softmax(self.alphas.detach().cpu(), dim=0).numpy()
+        alphas = F.softmax(self.alphas.detach().cpu(), dim=1).numpy()
         betas = beta_softmax(self.betas, self._steps).numpy()
         alphas = alphas * betas[:, None]
 
-        gene = _parse(F.softmax(alphas, dim=-1).cpu().detach().numpy())
+        gene = darts.parse_weights(alphas, self._steps)
         s = "+".join([f"|{'|'.join(f'{op}~{i}' for op, i in ops)}|" for ops in gene])
         return s
