@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from hinas.models.darts.search.darts import Network
 from torch.cuda.amp import autocast
 
 from horch.common import convert_tensor
@@ -15,7 +16,7 @@ def requires_grad(network: nn.Module, arch: bool, model: bool):
 
 class DARTSLearner(Learner):
 
-    def __init__(self, network, criterion, optimizer_arch, optimizer_model, lr_scheduler,
+    def __init__(self, network: Network, criterion, optimizer_arch, optimizer_model, lr_scheduler,
                  grad_clip_norm=5, search_loader=None, **kwargs):
         self.train_arch = True
         self.search_loader = search_loader
@@ -58,7 +59,7 @@ class DARTSLearner(Learner):
             logits = network(input)
             loss = self.criterion(logits, target)
         backward(self, loss)
-        optimizer_step(self, optimizer_model, network.parameters())
+        optimizer_step(self, optimizer_model, network.model_parameters())
 
         state.update({
             "loss": loss.item(),
@@ -98,3 +99,22 @@ class DARTSLearner(Learner):
         })
 
 
+class ThresholdedReLU(Layer):
+
+  def __init__(self, theta=1.0, **kwargs):
+    super(ThresholdedReLU, self).__init__(**kwargs)
+    self.supports_masking = True
+    self.theta = K.cast_to_floatx(theta)
+
+  def call(self, inputs):
+    theta = math_ops.cast(self.theta, inputs.dtype)
+    return inputs * math_ops.cast(math_ops.greater(inputs, theta), inputs.dtype)
+
+  def get_config(self):
+    config = {'theta': float(self.theta)}
+    base_config = super(ThresholdedReLU, self).get_config()
+    return dict(list(base_config.items()) + list(config.items()))
+
+  @tf_utils.shape_type_conversion
+  def compute_output_shape(self, input_shape):
+    return input_shape
