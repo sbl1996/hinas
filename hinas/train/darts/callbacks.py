@@ -8,7 +8,7 @@ class PrintGenotype(Callback):
         self.from_epoch = from_epoch
 
     def after_epoch(self, state):
-        if state['epoch'] < self.from_epoch:
+        if state['epoch'] + 1 < self.from_epoch:
             return
         p = """Genotype(
     normal=[
