@@ -55,7 +55,6 @@ set_defaults({
     },
     'bn': {
         'affine': False,
-        'track_running_stats': False,
     }
 })
 set_primitives(cfg.primitives)
