@@ -97,24 +97,3 @@ class DARTSLearner(Learner):
             "batch_size": input.size(0),
             "y_pred": output,
         })
-
-
-class ThresholdedReLU(Layer):
-
-  def __init__(self, theta=1.0, **kwargs):
-    super(ThresholdedReLU, self).__init__(**kwargs)
-    self.supports_masking = True
-    self.theta = K.cast_to_floatx(theta)
-
-  def call(self, inputs):
-    theta = math_ops.cast(self.theta, inputs.dtype)
-    return inputs * math_ops.cast(math_ops.greater(inputs, theta), inputs.dtype)
-
-  def get_config(self):
-    config = {'theta': float(self.theta)}
-    base_config = super(ThresholdedReLU, self).get_config()
-    return dict(list(base_config.items()) + list(config.items()))
-
-  @tf_utils.shape_type_conversion
-  def compute_output_shape(self, input_shape):
-    return input_shape
