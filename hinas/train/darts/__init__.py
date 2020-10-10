@@ -44,7 +44,7 @@ class DARTSLearner(Learner):
 
         if self.train_arch:
             input_search, target_search = convert_tensor(self.get_search_batch(), self.device)
-            # requires_grad(network, arch=True, model=False)
+            requires_grad(network, arch=True, model=False)
             optimizer_arch.zero_grad()
             with autocast(self.fp16):
                 logits_search = network(input_search)
@@ -52,7 +52,7 @@ class DARTSLearner(Learner):
             backward(self, loss_search)
             optimizer_step(self, optimizer_arch)
 
-        # requires_grad(network, arch=False, model=True)
+        requires_grad(network, arch=False, model=True)
         lr_scheduler.step(state['epoch'] + (state['step'] / state['steps']))
         optimizer_model.zero_grad()
         with autocast(self.fp16):
