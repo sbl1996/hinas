@@ -16,7 +16,7 @@ from horch.train import manual_seed
 from hinas.models.primitives import set_primitives, PRIMITIVES_darts
 from hinas.models.darts.search.pc_darts import Network
 from hinas.train.darts import DARTSLearner
-from hinas.train.darts.callbacks import TrainArchSchedule, PrintGenotype
+from hinas.train.darts.callbacks import TrainArch, PrintGenotype
 
 manual_seed(0)
 
@@ -81,4 +81,4 @@ trainer = DARTSLearner(model, criterion, optimizer_arch, optimizer_model, lr_sch
 
 trainer.fit(search_loader, 50, val_loader, val_freq=5,
             callbacks=[PrintGenotype(from_epoch=15),
-                       TrainArchSchedule(after_epochs=15)])
+                       TrainArch(after_epochs=15)])

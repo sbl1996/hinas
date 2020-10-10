@@ -28,14 +28,14 @@ class PrintGenotype(Callback):
         print(p % (tuple(g.normal) + tuple(g.reduce)))
 
 
-class TrainArchSchedule(Callback):
+class TrainArch(Callback):
 
-    def __init__(self, after_epochs):
+    def __init__(self, from_epoch):
         super().__init__()
-        self.after_epochs = after_epochs
+        self.from_epoch = from_epoch
 
     def begin_epoch(self, state):
-        self.learner.train_arch = state['epoch'] >= self.after_epochs
+        self.learner.train_arch = state['epoch'] + 1 > self.from_epoch
 
 
 class TauSchedule(Callback):

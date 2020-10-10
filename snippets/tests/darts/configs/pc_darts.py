@@ -1,5 +1,5 @@
 from hinas.models.primitives import PRIMITIVES_darts
-from hinas.train.darts.callbacks import PrintGenotype, TrainArchSchedule
+from hinas.train.darts.callbacks import PrintGenotype, TrainArch
 from hinas.models.darts.search.pc_darts import Network
 
 seed = 42
@@ -21,5 +21,5 @@ work_dir = 'models/PC-DARTS'
 val_freq = 5
 callbacks = [
     PrintGenotype(from_epoch=5),
-    TrainArchSchedule(after_epochs=5)
+    TrainArch(after_epochs=5)
 ]
