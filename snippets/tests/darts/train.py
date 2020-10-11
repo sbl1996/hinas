@@ -57,7 +57,6 @@ set_defaults({
     },
     'bn': {
         'affine': False,
-        'track_running_stats': False,
     }
 })
 set_primitives(cfg.primitives)
@@ -66,7 +65,7 @@ criterion = nn.CrossEntropyLoss()
 
 epochs = cfg.epochs
 optimizer_arch = Adam(model.arch_parameters(), lr=cfg.arch_lr, betas=(0.5, 0.999), weight_decay=1e-3)
-optimizer_model = SGD(model.parameters(), cfg.model_lr, momentum=0.9, weight_decay=getattr(cfg, "model_wd", 3e-4))
+optimizer_model = SGD(model.model_parameters(), cfg.model_lr, momentum=0.9, weight_decay=getattr(cfg, "model_wd", 3e-4))
 lr_scheduler = CosineLR(optimizer_model, epochs, min_lr=getattr(cfg, "model_min_lr", 0))
 
 train_metrics = {

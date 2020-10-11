@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from horch.nn import DropPath, GlobalAvgPool
-from horch.models.layers import Conv2d
+from horch.models.layers import Conv2d, Norm
 
 from hinas.models.operations import OPS, FactorizedReduce, ReLUConvBN
 from hinas.models.darts.genotypes import Genotype
@@ -68,7 +68,10 @@ class Network(nn.Module):
         self._multiplier = multiplier
 
         C_curr = stem_multiplier * C
-        self.stem = Conv2d(3, C_curr, kernel_size=3, norm='def')
+        self.stem = nn.Sequential(
+            Conv2d(3, C_curr, kernel_size=3),
+            Norm(C_curr, affine=True),
+        )
 
         C_prev_prev, C_prev, C_curr = C_curr, C_curr, C
         self.cells = nn.ModuleList()
