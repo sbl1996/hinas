@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from horch.nn import GlobalAvgPool
-from horch.models.layers import Conv2d, Act
+from horch.models.layers import Conv2d, Act, Norm
 
 from hinas.models.primitives import PRIMITIVES_nas_bench_201
 from hinas.models.operations import OPS, ReLUConvBN
@@ -79,7 +79,10 @@ class Network(nn.Module):
         self._steps = steps
 
         C_curr = stem_multiplier * C
-        self.stem = Conv2d(3, C_curr, 3, norm='default')
+        self.stem = nn.Sequential(
+            Conv2d(3, C_curr, kernel_size=3, bias=False),
+            Norm(C_curr, affine=True),
+        )
 
         C_prev, C_curr = C_curr, C
         self.cells = nn.ModuleList()
