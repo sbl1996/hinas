@@ -14,6 +14,7 @@ network_fn = lambda: Network(4, 5, k=2)
 epochs = 10
 arch_lr = 6e-4
 model_lr = 0.1
+model_min_lr = 1e-3
 grad_clip_norm = 5.0
 
 work_dir = 'models/PC-DARTS'
@@ -21,5 +22,5 @@ work_dir = 'models/PC-DARTS'
 val_freq = 5
 callbacks = [
     PrintGenotype(from_epoch=5),
-    TrainArch(after_epochs=5)
+    TrainArch(from_epoch=6)
 ]

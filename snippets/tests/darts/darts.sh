@@ -1,1 +1,1 @@
-python train.py configs/robust_darts.py
+python train.py configs/pc_darts.py

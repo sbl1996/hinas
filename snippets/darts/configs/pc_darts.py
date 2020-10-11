@@ -11,12 +11,13 @@ network_fn = lambda: Network(16, 8, k=4)
 epochs = 50
 arch_lr = 6e-4
 model_lr = 0.1
+model_min_lr = 1e-3
 grad_clip_norm = 5.0
 
 work_dir = 'models/PC-DARTS'
 
 val_freq = 5
 callbacks = [
-    PrintGenotype(from_epoch=15),
-    TrainArch(after_epochs=15)
+    PrintGenotype(from_epoch=16),
+    TrainArch(from_epoch=15)
 ]
