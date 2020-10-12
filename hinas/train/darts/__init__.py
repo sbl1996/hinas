@@ -1,11 +1,10 @@
 import torch
 import torch.nn as nn
-from hinas.models.darts.search.darts import Network
-from torch.cuda.amp import autocast
 
 from horch.common import convert_tensor
-from horch.train.learner import Learner, backward, optimizer_step
+from horch.train.learner import Learner
 
+from hinas.models.darts.search.darts import Network
 
 def requires_grad(network: Network, arch: bool, model: bool):
     for p in network.arch_parameters():
@@ -46,20 +45,19 @@ class DARTSLearner(Learner):
             input_search, target_search = convert_tensor(self.get_search_batch(), self.device)
             requires_grad(model, arch=True, model=False)
             optimizer_arch.zero_grad()
-            with autocast(self.fp16):
-                logits_search = model(input_search)
-                loss_search = self.criterion(logits_search, target_search)
-            backward(self, loss_search)
-            optimizer_step(self, optimizer_arch)
+            logits_search = model(input_search)
+            loss_search = self.criterion(logits_search, target_search)
+            loss_search.backward()
+            optimizer_arch.step()
 
         requires_grad(model, arch=False, model=True)
         lr_scheduler.step(state['epoch'] + (state['step'] / state['steps']))
         optimizer_model.zero_grad()
-        with autocast(self.fp16):
-            logits = model(input)
-            loss = self.criterion(logits, target)
-        backward(self, loss)
-        optimizer_step(self, optimizer_model, model.model_parameters())
+        logits = model(input)
+        loss = self.criterion(logits, target)
+        loss.backward()
+        nn.utils.clip_grad_norm_(model.model_parameters(), self.grad_clip_norm)
+        optimizer_model.step()
 
         state.update({
             "loss": loss.item(),
@@ -74,9 +72,8 @@ class DARTSLearner(Learner):
 
         model.eval()
         input, target = convert_tensor(batch, self.device)
-        with autocast(enabled=self.fp16):
-            with torch.no_grad():
-                output = model(input)
+        with torch.no_grad():
+            output = model(input)
 
         state.update({
             "batch_size": input.size(0),
