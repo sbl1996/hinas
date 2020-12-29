@@ -1,8 +1,7 @@
 import torch
-import torch.nn as nn
+from torch.cuda.amp import autocast
 
-from horch.common import convert_tensor
-from horch.train.learner import Learner
+from horch.train.learner import Learner, convert_tensor, backward, optimizer_step
 
 from hinas.models.darts.search.darts import Network
 
@@ -39,25 +38,27 @@ class DARTSLearner(Learner):
         lr_scheduler = self.lr_schedulers[0]
 
         model.train()
-        input, target = convert_tensor(batch, self.device)
+        input, target = convert_tensor(self, batch)
 
         if self.train_arch:
-            input_search, target_search = convert_tensor(self.get_search_batch(), self.device)
+            input_search, target_search = convert_tensor(self, self.get_search_batch())
             requires_grad(model, arch=True, model=False)
-            optimizer_arch.zero_grad()
-            logits_search = model(input_search)
-            loss_search = self.criterion(logits_search, target_search)
-            loss_search.backward()
-            optimizer_arch.step()
+            optimizer_arch.zero_grad(True)
+            with autocast(enabled=self.fp16):
+                logits_search = model(input_search)
+                loss_search = self.criterion(logits_search, target_search)
+            backward(self, loss_search)
+            optimizer_step(self, optimizer_arch)
+            # optimizer_arch.step()
 
         requires_grad(model, arch=False, model=True)
         lr_scheduler.step(state['epoch'] + (state['step'] / state['steps']))
-        optimizer_model.zero_grad()
-        logits = model(input)
-        loss = self.criterion(logits, target)
-        loss.backward()
-        nn.utils.clip_grad_norm_(model.model_parameters(), self.grad_clip_norm)
-        optimizer_model.step()
+        optimizer_model.zero_grad(True)
+        with autocast(enabled=self.fp16):
+            logits = model(input)
+            loss = self.criterion(logits, target)
+        backward(self, loss)
+        optimizer_step(self, optimizer_model, model.model_parameters())
 
         state.update({
             "loss": loss.item(),
@@ -71,9 +72,10 @@ class DARTSLearner(Learner):
         model = self.model
 
         model.eval()
-        input, target = convert_tensor(batch, self.device)
-        with torch.no_grad():
-            output = model(input)
+        input, target = convert_tensor(self, batch)
+        with autocast(enabled=self.fp16):
+            with torch.no_grad():
+                output = model(input)
 
         state.update({
             "batch_size": input.size(0),
@@ -86,9 +88,10 @@ class DARTSLearner(Learner):
         model = self.model
 
         model.eval()
-        input = convert_tensor(batch, self.device)
-        with torch.no_grad():
-            output = model(input)
+        input, target = convert_tensor(self, batch)
+        with autocast(enabled=self.fp16):
+            with torch.no_grad():
+                output = model(input)
 
         state.update({
             "batch_size": input.size(0),

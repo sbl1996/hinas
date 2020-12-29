@@ -1,4 +1,4 @@
-import torch.nn as nn
+from torch import nn
 from torch.optim import SGD, Adam
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
@@ -81,4 +81,4 @@ trainer = DARTSLearner(model, criterion, optimizer_arch, optimizer_model, lr_sch
 
 trainer.fit(search_loader, 50, val_loader, val_freq=5,
             callbacks=[PrintGenotype(from_epoch=15),
-                       TrainArch(after_epochs=15)])
+                       TrainArch(from_epoch=16)])
